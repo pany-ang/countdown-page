@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ref } from "vue"
 
+const isBrowserSupport = "speechSynthesis" in window
+
 // 定义响应式数据
 const playText = ref<string>("")
 const countdownStart = ref<string>("")
@@ -19,6 +21,26 @@ function handleInput() {
   } else {
     errorMessage.value = "" // 清除提示信息
   }
+}
+
+// 播放简单的“叮”声
+function playSound() {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+  const oscillator = audioContext.createOscillator()
+  oscillator.type = "triangle" // 使用三角波，声音更圆润
+  oscillator.frequency.setValueAtTime(800, audioContext.currentTime) // 设置频率为 800Hz
+  oscillator.connect(audioContext.destination)
+
+  // 添加音量控制，使声音逐渐变大然后消失，模拟一个短促的 “叮” 声
+  const gainNode = audioContext.createGain()
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime)
+  gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05) // 音量渐强
+  gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2) // 然后渐弱
+  oscillator.connect(gainNode)
+  gainNode.connect(audioContext.destination)
+
+  oscillator.start()
+  oscillator.stop(audioContext.currentTime + 0.2) // 播放 0.2 秒
 }
 
 // 播放简单的 “叮” 声
@@ -52,7 +74,11 @@ function startCountdown() {
       countdownValue.value--
     } else {
       // 播放声音
-      playTextSound()
+      if (isBrowserSupport) {
+        playTextSound()
+      } else {
+        playSound()
+      }
       // 倒计时结束后重置并开始新一轮倒计时
       countdownValue.value = Number.parseInt(countdownStart.value, 10)
     }
@@ -83,8 +109,8 @@ function pauseCountdown() {
         <input
           v-model="playText"
           type="text"
-          placeholder="语音提示文字，默认叮"
-          :disabled="isCounting"
+          placeholder="语音文案, 默认叮"
+          :disabled="isCounting && isBrowserSupport"
         >
         <div v-if="errorMessage" class="error-message">
           {{ errorMessage }}
