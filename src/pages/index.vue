@@ -48,8 +48,9 @@ function startCountdown() {
 
   // 启动倒计时
   countdownInterval.value = setInterval(() => {
-    countdownValue.value--
-    if (countdownValue.value <= 0) {
+    if (countdownValue.value > 1) {
+      countdownValue.value--
+    } else {
       // 播放声音
       playTextSound()
       // 倒计时结束后重置并开始新一轮倒计时
