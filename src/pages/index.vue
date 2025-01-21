@@ -110,7 +110,7 @@ function pauseCountdown() {
           v-model="playText"
           type="text"
           placeholder="语音文案, 默认叮"
-          :disabled="isCounting && isBrowserSupport"
+          :disabled="isCounting || !isBrowserSupport"
         >
         <div v-if="errorMessage" class="error-message">
           {{ errorMessage }}
